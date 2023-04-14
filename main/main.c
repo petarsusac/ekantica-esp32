@@ -1,10 +1,12 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "esp_log.h"
 #include "nvs_flash.h"
 
 #include "network.h"
+#include "moisture.h"
 
 void app_main(void)
 {
@@ -16,19 +18,23 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     network_init();
-
-    network_data_t data = {
-      .temperature = 25,
-      .humidity = 35,
-      .moisture = 1,
-      .water_level = 99,
-    };
-
-    int res = network_send_request(data);
-    printf("Response: %d\n", res);
+    moisture_init();
 
     while(1)
     {
-        vTaskDelay(1);
+      int moisture = read_moisture_percentage();
+      printf("moisture percentage: %d%%\n", moisture);
+
+      network_data_t data = {
+        .temperature = 25,
+        .humidity = 35,
+        .moisture = moisture,
+        .water_level = 99,
+      };
+
+      int res = network_send_request(data);
+      printf("Response: %d\n", res);
+
+      vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second
     }
 }
