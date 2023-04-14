@@ -2,7 +2,7 @@
 #include <esp_sleep.h>
 #include <esp_log.h>
 
-const char *TAG = "[SLEEP]";
+static const char *TAG = "[SLEEP]";
 
 void sleep_deep_ms(uint32_t ms)
 {
