@@ -15,11 +15,15 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define EXAMPLE_ESP_WIFI_SSID      "A1_1894576683"
-#define EXAMPLE_ESP_WIFI_PASS      "cXS9dkHH"
+#include "network.h"
+
+#include "wifi_config.h"
+
 #define EXAMPLE_ESP_MAXIMUM_RETRY  10
 
 #define MAX_HTTP_OUTPUT_BUFFER 1024
+
+#define HTTP_GET_QUERY_LENGTH 256
 
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -78,8 +82,8 @@ static void wifi_init_sta(void)
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
+            .ssid = WIFI_CONFIG_SSID,
+            .password = WIFI_CONFIG_PASS,
             /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (pasword len => 8).
              * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
              * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
@@ -108,10 +112,10 @@ static void wifi_init_sta(void)
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+                 WIFI_CONFIG_SSID, WIFI_CONFIG_PASS);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+                 WIFI_CONFIG_SSID, WIFI_CONFIG_PASS);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
@@ -207,24 +211,27 @@ void network_init(void)
     wifi_init_sta();
 }
 
-void network_send_request(void)
+int network_send_request(network_data_t params)
 {
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
 
+    char query[HTTP_GET_QUERY_LENGTH];
+
+    sprintf(query, "instant_temperature=%d&instant_moisture=%d&instant_humidity=%d&instant_water=%d",
+        params.temperature,
+        params.moisture,
+        params.humidity,
+        params.water_level
+    );
+
     esp_http_client_config_t config = {
-        .host = "ekantica-render.onrender.com",
-        .path = "/data",
-        .query = "instant_temperature=99&instant_moisture=99&instant_humidity=99&instant_water=99",
+        .host = NETWORK_HOST,
+        .path = NETWORK_PATH,
+        .query = query,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
         .event_handler = _http_event_handler,
         .user_data = local_response_buffer,        // Pass address of local buffer to get response
     };
-
-    /*esp_http_client_config_t config = {
-        .url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2",
-        .event_handler = _http_event_handler,
-        .user_data = local_response_buffer,
-    };*/
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
@@ -237,7 +244,24 @@ void network_send_request(void)
     } else {
         ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
     }
-    ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
+    
     puts(local_response_buffer);
+    
+    int ret;
+    if (strcmp(local_response_buffer, "True") == 0)
+    {
+        ret = 1;
+    }
+    else if (strcmp(local_response_buffer, "False") == 0)
+    {
+        ret = 0;
+    }
+    else 
+    {
+        ret = -1;
+    }
+
     esp_http_client_cleanup(client);
+
+    return ret;
 }

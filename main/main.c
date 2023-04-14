@@ -16,7 +16,16 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     network_init();
-    network_send_request();
+
+    network_data_t data = {
+      .temperature = 25,
+      .humidity = 35,
+      .moisture = 1,
+      .water_level = 99,
+    };
+
+    int res = network_send_request(data);
+    printf("Response: %d\n", res);
 
     while(1)
     {
