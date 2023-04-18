@@ -8,8 +8,10 @@
 #include "network.h"
 #include "moisture.h"
 #include "dht.h"
+#include "relay.h"
 
 #define DHT_PIN 10 // cast to gpio_num_t
+#define RELAY_PIN 9
 
 static const dht_sensor_type_t sensor_type = DHT_TYPE_DHT11;
 
@@ -29,6 +31,7 @@ void app_main(void)
 
     network_init();
     moisture_init();
+    relay_t *relay = relay_create(RELAY_PIN);
 
     while(1)
     {
@@ -52,6 +55,11 @@ void app_main(void)
 
       int response = network_send_request(data);
       printf("Response: %d\n", response);
+
+      if (response == 1)
+      {
+        relay_pulse_blocking(relay, 3000); // Turn pump on for 3 seconds
+      }
 
       vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second
     }
