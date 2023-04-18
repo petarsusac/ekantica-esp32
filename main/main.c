@@ -9,6 +9,7 @@
 #include "moisture.h"
 #include "dht.h"
 #include "relay.h"
+#include "sleep.h"
 
 #define DHT_PIN 10 // cast to gpio_num_t
 #define RELAY_PIN 9
@@ -61,6 +62,7 @@ void app_main(void)
         relay_pulse_blocking(relay, 3000); // Turn pump on for 3 seconds
       }
 
-      vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second
+      // vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second
+      sleep_light_ms(1000);
     }
 }
