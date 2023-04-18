@@ -195,11 +195,13 @@ static esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             }
             output_len = 0;
             break;
-        case HTTP_EVENT_REDIRECT:
-            ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
-            esp_http_client_set_header(evt->client, "From", "user@example.com");
-            esp_http_client_set_header(evt->client, "Accept", "text/html");
-            esp_http_client_set_redirection(evt->client);
+        // case HTTP_EVENT_REDIRECT:
+        //     ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
+        //     esp_http_client_set_header(evt->client, "From", "user@example.com");
+        //     esp_http_client_set_header(evt->client, "Accept", "text/html");
+        //     esp_http_client_set_redirection(evt->client);
+        //     break;
+        default:
             break;
     }
     return ESP_OK;
@@ -245,7 +247,7 @@ int network_send_request(network_data_t params)
         ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
     }
     
-    puts(local_response_buffer);
+    ESP_LOGI(TAG, "HTTP GET response: %s", local_response_buffer);
     
     int ret;
     if (strcmp(local_response_buffer, "True") == 0)
