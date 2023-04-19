@@ -1,4 +1,4 @@
 #pragma once
 
-#define WIFI_CONFIG_SSID      "A1_1894576683"
-#define WIFI_CONFIG_PASS      "cXS9dkHH"
+#define WIFI_CONFIG_SSID      "pelence123"
+#define WIFI_CONFIG_PASS      "fscj5081"
