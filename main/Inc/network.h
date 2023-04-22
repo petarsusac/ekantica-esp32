@@ -8,6 +8,8 @@ typedef struct {
     int humidity;
     int moisture;
     int water_level;
+    int uv_index;
+    int visible_light;
 } network_data_t;
 
 void network_init(void);

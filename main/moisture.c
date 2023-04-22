@@ -1,25 +1,30 @@
+#include "adc.h"
 #include "moisture.h"
 
+/**
+ * Setup moisture ADC settings.
+ */
 void moisture_init() {
-    //Configure ADC
-    adc1_config_width(width);
-    adc1_config_channel_atten(channel, atten);
-    adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    adc1_config_channel_atten(moisture_channel, atten);
 }
 
-int read_moisture_percentage(void) {
+/**
+ * Reads moisture from dedicated GPIO pin.
+ * Returns moisture percentage.
+ */
+int read_moisture(void) {
 
-    // Read the voltage from channel 0 of ADC_UNIT_1
-    int adc_value = adc1_get_raw((adc1_channel_t)channel);
+    int adc_value = adc1_get_raw(moisture_channel);
     float moisture = 0;
     
-	if (adc_value >= DRY_SOIL) {
-		moisture = 0.0;
-	} else if (adc_value <= WET_SOIL) {
+	if (adc_value >= WET_SOIL) {
 		moisture = 100.0;
+	} else if (adc_value <= DRY_SOIL) {
+		moisture = 0.0;
 	} else {
-		moisture = ((100.0)/((double) WET_SOIL - (double) DRY_SOIL))*((double) (adc_value) - (double) DRY_SOIL);
+		moisture = ((100.0)/((double) DRY_SOIL - (double) WET_SOIL))*((double) (adc_value) - (double) WET_SOIL);
 	}
 
     return (int)moisture;
+	// return adc_value;
 }

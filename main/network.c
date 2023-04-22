@@ -219,11 +219,14 @@ int network_send_request(network_data_t params)
 
     char query[HTTP_GET_QUERY_LENGTH];
 
-    sprintf(query, "instant_temperature=%d&instant_moisture=%d&instant_humidity=%d&instant_water=%d",
+    sprintf(query, 
+    "instant_temperature=%d&instant_moisture=%d&instant_humidity=%d&instant_water=%d&instant_uv=%d&instant_light=%d",
         params.temperature,
         params.moisture,
         params.humidity,
-        params.water_level
+        params.water_level,
+        params.uv_index,
+        params.visible_light
     );
 
     esp_http_client_config_t config = {

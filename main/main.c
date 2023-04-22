@@ -10,9 +10,15 @@
 #include "dht.h"
 #include "relay.h"
 #include "sleep.h"
+#include "moisture.h"
+#include "water.h"
+#include "adc.h"
+#include "i2c.h"
+#include "si1145.h"
 
-#define DHT_PIN 10 // cast to gpio_num_t
-#define RELAY_PIN 9
+#define DHT_PIN GPIO_NUM_10 
+#define I2C_ADDR_SI1145 0x60 // I2C address of the SI1145 sensor
+#define RELAY_PIN 5
 
 static const dht_sensor_type_t sensor_type = DHT_TYPE_DHT11;
 
@@ -29,17 +35,29 @@ void app_main(void)
     float humidity = 0;
     float temperature = 0;
     int moisture = 0;
+    int water_level = 0;
+    uint16_t uv_index = 0;
+    uint16_t visible_light = 0;
 
     network_init();
+
+    adc_init();
     moisture_init();
+    water_init();
+    i2c_init(I2C_NUM_0, SDA_PIN, SCL_PIN);
+    si1145_init(I2C_NUM_0, I2C_ADDR_SI1145);
+
     relay_t *relay = relay_create(RELAY_PIN);
 
     while(1)
     {
-      moisture = read_moisture_percentage();
+      moisture = read_moisture();
       printf("moisture percentage: %d%%\n", moisture);
 
-      dht_ok = dht_read_float_data(sensor_type, (gpio_num_t)DHT_PIN, &humidity, &temperature) != ESP_OK;
+      water_level = read_water_level();
+      printf("water level: %d%%\n", water_level);  
+
+      dht_ok = dht_read_float_data(sensor_type, DHT_PIN, &humidity, &temperature) != ESP_OK;
 
       if(dht_ok == ESP_OK) {
           printf("Temperature: %.2f°C, Humidity: %.2f%%\n", temperature, humidity);
@@ -47,11 +65,18 @@ void app_main(void)
           printf("Error reading DHT22 sensor\n");
       }
 
+      si1145_read_uv_index(&uv_index);
+      si1145_read_visible(&visible_light);
+      printf("UV index: %d%%\n", uv_index);
+      printf("Visible light: %d%%\n", visible_light);
+
       network_data_t data = {
         .temperature = temperature,
         .humidity = humidity,
         .moisture = moisture,
-        .water_level = 99,
+        .water_level = water_level,
+        .uv_index = (int)uv_index,
+        .visible_light = (int)visible_light
       };
 
       int response = network_send_request(data);
